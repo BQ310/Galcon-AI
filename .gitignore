@@ -1,0 +1,3 @@
+opponent_bots/*.log
+*.txt
+__pycache__/
