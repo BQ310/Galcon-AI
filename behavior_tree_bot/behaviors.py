@@ -30,33 +30,13 @@ def attack_closest_enemy_planet(state):
                 return issue_order(state, p.ID, closest_enemy_to_p.ID, required_ships)
     return False
 
-#spread behavior
-def spread_to_weakest_neutral_planet(state):
-    
-    # (2) Find my strongest planet.
-    strongest_planet = max(state.my_planets(), key=lambda p: p.num_ships, default=None)
-
-    # (3) Find the weakest neutral planet.
-    weakest_planet = min(state.neutral_planets(), key=lambda p: p.num_ships, default=None)
-
-    if not strongest_planet or not weakest_planet:
-        # No legal source or destination
-        return False
-    else:
-        required_ships = weakest_planet.num_ships + 1
-        if strongest_planet.num_ships > required_ships:
-        # (4) Send half the ships from my strongest planet to the weakest enemy planet.
-            return issue_order(state, strongest_planet.ID, weakest_planet.ID, required_ships)
-
-def spread_to_gr_neutral_planet(state):
-    
-    strongest_planet = max(state.my_planets(), key=lambda p: p.num_ships, default=None)
-    highest_gr_planet = max(state.neutral_planets(), key=lambda p: p.growth_rate, default=None)
-    if not strongest_planet or not highest_gr_planet:
-        # No legal source or destination
-        return False
-    else:
-        # (4) Send half the ships from my strongest planet to the weakest enemy planet.
-        required_ships = highest_gr_planet.num_ships + 1
-        if strongest_planet.num_ships > required_ships:
-            return issue_order(state, strongest_planet.ID, highest_gr_planet.ID, required_ships)
+def spread_to_weakest_neutral(state):
+    my_planets = iter(sorted(state.my_planets(), key=lambda p: p.num_ships))
+    neutral_planets = [planet for planet in state.neutral_planets()
+                      if not any(fleet.destination_planet == planet.ID for fleet in state.my_fleets())]
+    weakest = min(neutral_planets, key=lambda p: p.num_ships, default=None)
+    for p in my_planets:
+        required_ships = weakest.num_ships + 1
+        if p.num_ships > required_ships:
+            return issue_order(state, p.ID, weakest.ID, required_ships)
+    return False
