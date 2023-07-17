@@ -28,10 +28,13 @@ def setup_behavior_tree():
   
     spread_plan = Sequence(name='Spread Strategy')
     is_neutral = Check(if_neutral_planet_available)
+    not_attacked = Check(if_not_being_attacked)
     spread_close = Action(spread_to_closest)
     spread_value = Action(spread_to_value)
     close_or_value = Selector(name='close or value')
-    close_or_value.child_nodes = [spread_value, spread_close]
+    should_value = Sequence(name='should spread value')
+    should_value.child_nodes = [not_attacked, spread_value]
+    close_or_value.child_nodes = [should_value.copy(), spread_close]
     spread_plan.child_nodes = [is_neutral,  close_or_value.copy()]
 
     offensive_plan = Selector(name='Offensive Strategy')
