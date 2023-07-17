@@ -25,18 +25,20 @@ def setup_behavior_tree():
 
     # Top-down construction of behavior tree
     root = Selector(name='High Level Ordering of Strategies')
-
+  
     spread_plan = Sequence(name='Spread Strategy')
     is_neutral = Check(if_neutral_planet_available)
-    more_neutral = Check(if_own_less_than_neutral)
-    spread_weak = Action(spread_to_weakest_neutral)
-    spread_plan.child_nodes = [is_neutral, more_neutral, spread_weak]
+    spread_close = Action(spread_to_closest)
+    spread_value = Action(spread_to_value)
+    close_or_value = Selector(name='close or value')
+    close_or_value.child_nodes = [spread_value, spread_close]
+    spread_plan.child_nodes = [is_neutral,  close_or_value.copy()]
 
     offensive_plan = Selector(name='Offensive Strategy')
-    attack_close = Action(attack_closest_planet)
-    attack_weak = Action(attack_weakest_enemy_planet)
-    offensive_plan.child_nodes = [attack_close]
+    attack_close = Action(attack_closest_enemy_planet)
 
+    offensive_plan.child_nodes = [attack_close]
+    
     root.child_nodes = [spread_plan, offensive_plan]
 
     logging.info('\n' + root.tree_to_string())
