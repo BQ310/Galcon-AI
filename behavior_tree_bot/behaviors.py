@@ -19,13 +19,16 @@ def attack_weakest_enemy_planet(state):
         return issue_order(state, strongest_planet.ID, weakest_planet.ID, strongest_planet.num_ships / 2)
 
 #attack closest
-def attack_closest_enemy_planet(state):
+def attack_closest_planet(state):
     targets = [planet for planet in state.not_my_planets() if not any(fleet.destination_planet == planet.ID for fleet in state.my_fleets())]
     for p in state.my_planets():
         closest_enemy_to_p = min(targets, key=lambda o: state.distance(p.ID, o.ID), default=None)
         if closest_enemy_to_p is not None:
             dist = state.distance(p.ID, closest_enemy_to_p.ID)
-            required_ships = closest_enemy_to_p.num_ships + dist * closest_enemy_to_p.growth_rate + 1
+            if closest_enemy_to_p.owner == 2:
+                required_ships = closest_enemy_to_p.num_ships + dist * closest_enemy_to_p.growth_rate + 1
+            else:
+                required_ships = closest_enemy_to_p.num_ships + 1
             if p.num_ships > required_ships:
                 return issue_order(state, p.ID, closest_enemy_to_p.ID, required_ships)
     return False

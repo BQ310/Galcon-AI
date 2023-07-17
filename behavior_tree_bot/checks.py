@@ -16,7 +16,7 @@ def too_large(state):
     if biggest.num_ships > 100:
         return True
     
-
 def if_own_less_than_neutral(state):
     if len(state.my_planets()) < len(state.neutral_planets()):
         return True
+    
