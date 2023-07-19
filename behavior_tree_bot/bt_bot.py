@@ -28,19 +28,25 @@ def setup_behavior_tree():
     
     # Checks
     is_enemy_spreading = Check(if_enemy_spread)
+    is_enemy_attacking = Check(if_enemy_attack)
 
     # Actions
     attack = Action(attack_weakest_enemy)
     counter = Action(counterattack_enemy_spread)
-    spread = Action(spread_weakest)
+    defend = Action(defend_enemy_attack)
+
+    # Sequences
+    try_counter = Sequence(name='try counter')
+    try_counter.child_nodes = [is_enemy_spreading, counter]
 
     # Plans
-    spread_plan = Sequence(name='spread plan')
+    attack_plan = Selector(name='attack plan')
+    attack_plan.child_nodes = [try_counter, attack]
 
-    attack_plan = Sequence(name='attack plan')
-    attack_plan.child_nodes = [is_enemy_spreading, counter]
+    defense_plan = Sequence(name='defense plan')
+    defense_plan.child_nodes = [is_enemy_attacking, defend]
 
-    root.child_nodes = [attack_plan]
+    root.child_nodes = [ defense_plan, attack_plan ]
 
     logging.info('\n' + root.tree_to_string())
     return root
