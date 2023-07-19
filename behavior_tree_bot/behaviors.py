@@ -14,19 +14,21 @@ def attack_weakest_enemy(state):
     return False
 
 def counterattack_enemy_spread(state):
-    possible_neutral = [planets for planets in state.neutral_planets() if not any(fleets.destination_planet == planets.ID for fleets in state.my_fleets())]
-    possible_netural_id = [planets.ID for planets in possible_neutral]
-    spreading_fleets = [fleet for fleet in state.enemy_fleets() if fleet.destination_planet in possible_netural_id]
+    possible_neutral_id = [planets.ID for planets in state.neutral_planets() if not any(fleets.destination_planet == planets.ID for fleets in state.my_fleets())]
+    spreading_fleets = [fleet for fleet in state.enemy_fleets() if fleet.destination_planet in possible_neutral_id]
     strongest = max(state.my_planets(), key=lambda p:p.num_ships, default=None)
     if not spreading_fleets or not strongest:
         return False
     
     for sf in spreading_fleets:
-        target = state.planets[sf.destination_planet]
-        return False
-        
+        target_planet = state.planets[sf.destination_planet]
+        distance = state.distance(strongest.ID, target_planet.ID)
+        distance_till_fleet = sf.turns_remaining
+        required_ships = (sf.num_ships - target_planet.num_ships) + (distance - distance_till_fleet) * target_planet.growth_rate + 1
+        if strongest.num_ships > required_ships:
+            if distance >= distance_till_fleet + 1:
+                return issue_order(state, strongest.ID, target_planet.ID, required_ships)
     return False
-    
 
 
 def spread_weakest(state):
