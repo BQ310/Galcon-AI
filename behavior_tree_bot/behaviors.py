@@ -2,45 +2,40 @@ import sys
 sys.path.insert(0, '../')
 from planet_wars import issue_order
 
-#helper functions
-def closest(state, source, target_planets, x):
-    target_planets.sort(key=lambda o:state.distance(source.ID, o.ID))
-    if x == None:
-        return target_planets.sort(key=lambda o:state.distance(source.ID, o.ID))
-    return target_planets[:x]
-
-# attack behavior
-def attack_closest_enemy_planet(state):
-    targets = [planet for planet in state.enemy_planets() if not any(fleet.destination_planet == planet.ID for fleet in state.my_fleets())]
-    for p in state.my_planets():
-        closest_planets = closest(state, p, targets, 3)
-        for cp in closest_planets:
-            dist = state.distance(p.ID, cp.ID)
-            required_ships = cp.num_ships + dist * cp.growth_rate + 1
-            if p.num_ships > required_ships:
-                return issue_order(state, p.ID, cp.ID, required_ships)
-    return False
-
-# spread behavior
-def spread_to_closest(state):
-    targets = [planet for planet in state.neutral_planets() if not any(fleet.destination_planet == planet.ID for fleet in state.my_fleets())]
-    for p in state.my_planets():
-        closest_planets = closest(state, p, targets, 3)
-        for cp in closest_planets:
-            dist = state.distance(p.ID, cp.ID)
-            required_ships = cp.num_ships + 1
-            if p.num_ships > required_ships:
-                return issue_order(state, p.ID, cp.ID, required_ships)
-    return False
-
-def spread_to_value(state):
-    targets = [planet for planet in state.neutral_planets() if not any(fleet.destination_planet == planet.ID for fleet in state.my_fleets())]
-    highest_value = max(targets, key=lambda p: p.growth_rate, default=None)
-    strongest = max(state.my_planets(), key=lambda p: p.num_ships, default=None)
-    if not highest_value or not strongest:
+def attack_weakest_enemy(state):
+    targets = [planets for planets in state.enemy_planets() if not any(fleets.destination_planet == planets.ID for fleets in state.my_fleets())]
+    strongest = max(state.my_planets(), key=lambda p:p.num_ships, default=None)
+    weakest = min(targets, key=lambda p: p.num_ships, default=None)
+    if not strongest and not weakest:
         return False
-    required_ships = highest_value.num_ships + 1
+    required_ships = weakest.num_ships + state.distance(strongest.ID, weakest.ID) * weakest.growth_rate + 1
     if strongest.num_ships > required_ships:
-        return issue_order(state, strongest.ID, highest_value.ID, required_ships)
+        return issue_order(state, strongest.ID, weakest.ID, required_ships)
+    return False
 
-    return False           
+def counterattack_enemy_spread(state):
+    possible_neutral = [planets for planets in state.neutral_planets() if not any(fleets.destination_planet == planets.ID for fleets in state.my_fleets())]
+    possible_netural_id = [planets.ID for planets in possible_neutral]
+    spreading_fleets = [fleet for fleet in state.enemy_fleets() if fleet.destination_planet in possible_netural_id]
+    strongest = max(state.my_planets(), key=lambda p:p.num_ships, default=None)
+    if not spreading_fleets or not strongest:
+        return False
+    
+    for sf in spreading_fleets:
+        target = state.planets[sf.destination_planet]
+        return False
+        
+    return False
+    
+
+
+def spread_weakest(state):
+    targets = [planets for planets in state.neutral_planets() if not any(fleets.destination_planet == planets.ID for fleets in state.my_fleets())]
+    strongest = max(state.my_planets(), key=lambda p:p.num_ships, default=None)
+    weakest = min(targets, key=lambda p: p.num_ships, default=None)
+    if not strongest or not weakest:
+        return False
+    required_ships = weakest.num_ships + 1
+    if strongest.num_ships > required_ships:
+        return issue_order(state, strongest.ID, weakest.ID, required_ships)
+    return False
