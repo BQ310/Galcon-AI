@@ -2,11 +2,12 @@ import sys
 sys.path.insert(0, '../')
 from planet_wars import issue_order
 
+# attack
 def attack_weakest_enemy(state):
     targets = [planets for planets in state.enemy_planets() if not any(fleets.destination_planet == planets.ID for fleets in state.my_fleets())]
     strongest = max(state.my_planets(), key=lambda p:p.num_ships, default=None)
     weakest = min(targets, key=lambda p: p.num_ships, default=None)
-    if not strongest and not weakest:
+    if not strongest or not weakest:
         return False
     required_ships = weakest.num_ships + state.distance(strongest.ID, weakest.ID) * weakest.growth_rate + 1
     if strongest.num_ships > required_ships:
@@ -30,7 +31,7 @@ def counterattack_enemy_spread(state):
                 return issue_order(state, strongest.ID, target_planet.ID, required_ships)
     return False
 
-
+# spread
 def spread_weakest(state):
     targets = [planets for planets in state.neutral_planets() if not any(fleets.destination_planet == planets.ID for fleets in state.my_fleets())]
     strongest = max(state.my_planets(), key=lambda p:p.num_ships, default=None)
@@ -40,4 +41,24 @@ def spread_weakest(state):
     required_ships = weakest.num_ships + 1
     if strongest.num_ships > required_ships:
         return issue_order(state, strongest.ID, weakest.ID, required_ships)
+    return False
+
+# defend
+def defend_enemy_attack(state):
+    # defend planet if im not already defending it
+    possible_my_id = [planets.ID for planets in state.my_planets() if not any(fleets.destination_planet == planets.ID for fleets in state.my_fleets())]
+    # all the attacking fleets
+    attacking_fleets = [fleet for fleet in state.enemy_fleets() if fleet.destination_planet in possible_my_id]
+    strongest = max(state.my_planets(), key=lambda p:p.num_ships, default=None)
+    if not attacking_fleets or not strongest:
+        return False
+    
+    for af in attacking_fleets:
+        target_planet = state.planets[af.destination_planet]
+        distance = state.distance(strongest.ID, target_planet.ID)
+        distance_till_fleet = af.turns_remaining
+        required_ships = af.num_ships - (target_planet.num_ships + distance_till_fleet * target_planet.growth_rate) + (distance - distance_till_fleet) * target_planet.growth_rate + 1
+        if strongest.num_ships > required_ships:
+            if distance >= distance_till_fleet + 1:
+                return issue_order(state, strongest.ID, target_planet.ID, required_ships)
     return False
