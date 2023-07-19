@@ -25,7 +25,7 @@ def counterattack_enemy_spread(state):
         target_planet = state.planets[sf.destination_planet]
         distance = state.distance(strongest.ID, target_planet.ID)
         distance_till_fleet = sf.turns_remaining
-        required_ships = (sf.num_ships - target_planet.num_ships) + (distance - distance_till_fleet) * target_planet.growth_rate + 1
+        required_ships = (distance - distance_till_fleet) * target_planet.growth_rate + 2
         if strongest.num_ships > required_ships:
             if distance >= distance_till_fleet + 1:
                 return issue_order(state, strongest.ID, target_planet.ID, required_ships)
@@ -57,7 +57,7 @@ def defend_enemy_attack(state):
         target_planet = state.planets[af.destination_planet]
         distance = state.distance(strongest.ID, target_planet.ID)
         distance_till_fleet = af.turns_remaining
-        required_ships = af.num_ships - (target_planet.num_ships + distance_till_fleet * target_planet.growth_rate) + (distance - distance_till_fleet) * target_planet.growth_rate + 1
+        required_ships = (distance - distance_till_fleet) * target_planet.growth_rate + 2
         if strongest.num_ships > required_ships:
             if distance >= distance_till_fleet + 1:
                 return issue_order(state, strongest.ID, target_planet.ID, required_ships)

@@ -39,7 +39,6 @@ def setup_behavior_tree():
     try_counter = Sequence(name='try counter')
     try_counter.child_nodes = [is_enemy_spreading, counter]
 
-
     # Plans
     attack_plan = Selector(name='attack plan')
     attack_plan.child_nodes = [try_counter, attack]
@@ -47,7 +46,7 @@ def setup_behavior_tree():
     defense_plan = Sequence(name='defense plan')
     defense_plan.child_nodes = [is_enemy_attacking, defend]
 
-    root.child_nodes = [attack_plan, defense_plan]
+    root.child_nodes = [ defense_plan, attack_plan ]
 
     logging.info('\n' + root.tree_to_string())
     return root
